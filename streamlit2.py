@@ -774,7 +774,6 @@ elif page == "📈 Turnout Change Analysis":
 
     else:
         st.error("Required columns missing: state, year, total_votes, total_electors")
-
 # -----------------------------
 # PAGE: Gender-based Analysis
 # -----------------------------
@@ -786,17 +785,15 @@ elif page == "🗳️ Gender Analysis":
     if missing_cols:
         st.warning(f"Cannot perform gender-wise turnout analysis. Missing columns: {', '.join(missing_cols)}")
     else:
-        # Normalize gender values
-        df_filtered["Gender"] = df_filtered["sex"].replace({
-           "M": "Male",
-           "F": "Female",
-           "O": "Other",
-           "o": "Other",
-           "THIRD": "Third",
-           "Third": "Third",
-           "FEMALE": "Female",
-           "MALE": "Male"
-})
+        # Normalize gender values: strip spaces and convert to uppercase
+        df_filtered["Gender"] = (
+            df_filtered["sex"]
+            .astype(str)  # Ensure it's a string
+            .str.strip()  # Remove leading/trailing spaces
+            .str.upper()  # Convert to uppercase for consistent mapping
+            .replace({"M": "Male", "F": "Female", "O": "Other", "o": "Other", "THIRD": "Third", "Third": "Third", "FEMALE": "Female", "MALE": "Male"
+            })
+        )
 
         # Aggregate votes by gender
         turnout_gender = df_filtered.groupby("Gender").agg(
@@ -806,11 +803,8 @@ elif page == "🗳️ Gender Analysis":
 
         turnout_gender["turnout_pct"] = (turnout_gender["total_votes"] / turnout_gender["total_electors"]) * 100
 
-        st.markdown("### 🔹 Table: Gender-wise Voter Turnout")
-        st.dataframe(turnout_gender)
-
         # Bar chart visualization
-        fig = px.bar(
+        fig_bar = px.bar(
             turnout_gender,
             x="Gender",
             y="turnout_pct",
@@ -819,9 +813,20 @@ elif page == "🗳️ Gender Analysis":
             title="Gender-wise Voter Turnout (%)",
             labels={"turnout_pct": "Turnout (%)"}
         )
-        fig.update_traces(textposition="outside")
-        fig.update_layout(yaxis=dict(range=[0, 100]))
-        st.plotly_chart(fig, use_container_width=True)
+        fig_bar.update_traces(textposition="outside")
+        fig_bar.update_layout(yaxis=dict(range=[0, 100]))
+        st.plotly_chart(fig_bar, use_container_width=True)
+
+        # Pie chart visualization
+        fig_pie = px.pie(
+            turnout_gender,
+            names="Gender",
+            values="total_votes",
+            title="Gender-wise Vote Share",
+            color="Gender",
+            color_discrete_sequence=px.colors.qualitative.Set2
+        )
+        st.plotly_chart(fig_pie, use_container_width=True)
 
 # -----------------------------
 # PAGE: Age-wise Turnout Analysis
@@ -848,11 +853,8 @@ elif page == "Age-wise Turnout":
             total_votes=('general_votes', 'sum')
         ).reset_index()
 
-        st.markdown("### 🔹 Table: Votes by Age Group")
-        st.dataframe(age_turnout)
-
         # Bar chart
-        fig = px.bar(
+        fig_bar = px.bar(
             age_turnout,
             x='age_group',
             y='total_votes',
@@ -861,5 +863,16 @@ elif page == "Age-wise Turnout":
             title="Age-wise Voter Turnout",
             labels={'total_votes': 'Total Votes', 'age_group': 'Age Group'}
         )
-        fig.update_traces(texttemplate='%{text:,}', textposition='outside')
-        st.plotly_chart(fig, use_container_width=True)
+        fig_bar.update_traces(texttemplate='%{text:,}', textposition='outside')
+        st.plotly_chart(fig_bar, use_container_width=True)
+
+        # Pie chart
+        fig_pie = px.pie(
+            age_turnout,
+            names='age_group',
+            values='total_votes',
+            title="Age-wise Vote Share",
+            color='age_group',
+            color_discrete_sequence=px.colors.qualitative.Set3
+        )
+        st.plotly_chart(fig_pie, use_container_width=True)
