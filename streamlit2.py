@@ -787,12 +787,14 @@ elif page == "🗳️ Gender Analysis":
     else:
         # Normalize gender values
         df_filtered["Gender"] = df_filtered["sex"].replace({
-    "M": "Male",
-    "F": "Female",
-    "O": "Other",
-    "o": "Other",
-    "THIRD": "Third",
-    "Third": "Third"
+         "M": "Male",
+         "F": "Female",
+         "O": "Other",
+         "o": "Other",
+         "THIRD": "Third",
+         "Third": "Third",
+         "FEMALE": "Female",
+         "MALE": "Male"
 })
 
         # Aggregate votes by gender
