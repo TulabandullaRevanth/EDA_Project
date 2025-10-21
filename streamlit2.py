@@ -774,6 +774,7 @@ elif page == "📈 Turnout Change Analysis":
 
     else:
         st.error("Required columns missing: state, year, total_votes, total_electors")
+
 # -----------------------------
 # PAGE: Gender-based Analysis
 # -----------------------------
