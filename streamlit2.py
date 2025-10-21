@@ -817,66 +817,43 @@ elif page == "🗳️ Gender Analysis":
         fig.update_traces(textposition="outside")
         fig.update_layout(yaxis=dict(range=[0, 100]))
         st.plotly_chart(fig, use_container_width=True)
-
 # -----------------------------
 # PAGE: Age-wise Turnout Analysis
 # -----------------------------
 elif page == "Age-wise Turnout":
     st.markdown("## 🗳️ Age-wise Turnout Analysis")
 
-    required_cols = {"age", "year", "general_votes"}
+    required_cols = {"age", "general_votes"}
     missing_cols = required_cols - set(df_filtered.columns)
     if missing_cols:
         st.warning(f"Cannot perform age-wise turnout analysis. Missing columns: {', '.join(missing_cols)}")
     else:
         df_age = df_filtered[df_filtered['age'].notna()].copy()
+        df_age['age'] = pd.to_numeric(df_age['age'], errors='coerce')
+        df_age = df_age.dropna(subset=['age'])
 
         # Create age groups
         bins = [18, 25, 35, 45, 55, 65, 100]
         labels = ['18-24', '25-34', '35-44', '45-54', '55-64', '65+']
         df_age['age_group'] = pd.cut(df_age['age'], bins=bins, labels=labels, right=False)
 
-        # Aggregate votes by year and age group
-        age_turnout = df_age.groupby(['year', 'age_group']).agg({'general_votes':'sum'}).reset_index()
+        # Aggregate votes by age group
+        age_turnout = df_age.groupby('age_group').agg(
+            total_votes=('general_votes', 'sum')
+        ).reset_index()
 
-        # Pivot for comparison between years
-        age_turnout_pivot = age_turnout.pivot(index='age_group', columns='year', values='general_votes').reset_index()
-        age_turnout_pivot['change'] = age_turnout_pivot.get(2019, 0) - age_turnout_pivot.get(2014, 0)
-        age_turnout_pivot['abs_change'] = age_turnout_pivot['change'].abs()
-        age_turnout_pivot = age_turnout_pivot.sort_values('abs_change', ascending=False)
+        st.markdown("### 🔹 Table: Votes by Age Group")
+        st.dataframe(age_turnout)
 
-        st.markdown("### 🔹 Table: Age-wise Turnout & Change (2014 → 2019)")
-        st.dataframe(age_turnout_pivot)
-
-        # -----------------------------
-        # Bar chart: 2014 vs 2019
-        # -----------------------------
-        age_melted = age_turnout.pivot(index='age_group', columns='year', values='general_votes').fillna(0).reset_index()
-        age_melted = age_melted.melt(id_vars='age_group', value_vars=[2014, 2019], var_name='Year', value_name='Votes')
-
-        fig_bar = px.bar(
-            age_melted,
-            x='age_group',
-            y='Votes',
-            color='Year',
-            barmode='group',
-            text='Votes',
-            title="Age-wise Voter Turnout Comparison (2014 vs 2019)"
-        )
-        fig_bar.update_traces(texttemplate='%{text:,}', textposition='outside')
-        fig_bar.update_layout(yaxis=dict(title='Total Votes'))
-        st.plotly_chart(fig_bar, use_container_width=True)
-
-        # -----------------------------
-        # Line chart: Turnout trend by age group
-        # -----------------------------
-        fig_line = px.line(
+        # Bar chart
+        fig = px.bar(
             age_turnout,
-            x='year',
-            y='general_votes',
+            x='age_group',
+            y='total_votes',
+            text='total_votes',
             color='age_group',
-            markers=True,
-            title="Age Group Turnout Trend"
+            title="Age-wise Voter Turnout",
+            labels={'total_votes': 'Total Votes', 'age_group': 'Age Group'}
         )
-        fig_line.update_layout(yaxis=dict(title='Total Votes'), xaxis=dict(tickmode='linear'))
-        st.plotly_chart(fig_line, use_container_width=True)
+        fig.update_traces(texttemplate='%{text:,}', textposition='outside')
+        st.plotly_chart(fig, use_container_width=True)
