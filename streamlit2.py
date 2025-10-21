@@ -785,7 +785,7 @@ elif page == "🗳️ Gender Analysis":
         st.warning("Category or total_votes column missing — cannot perform analysis.")
     else:
         # Normalize gender values
-        df_filtered["gender_norm"] = df_filtered["category"].astype(str).str.upper().replace({
+        df_filtered["Sex"] = df_filtered["category"].astype(str).str.upper().replace({
             "M": "Male",
             "F": "Female",
             "MALE": "Male",
@@ -793,12 +793,12 @@ elif page == "🗳️ Gender Analysis":
         })
 
         # Count votes by gender
-        gender_counts = df_filtered.groupby("gender_norm")["total_votes"].sum().reset_index()
+        gender_counts = df_filtered.groupby("Sex")["total_votes"].sum().reset_index()
         st.markdown("### 🔹 Total Votes by Gender")
         st.dataframe(gender_counts)
 
         # Votes per party by gender
-        gender_party = df_filtered.groupby(["gender_norm", "party"])["total_votes"].sum().reset_index()
+        gender_party = df_filtered.groupby(["Sex", "party"])["total_votes"].sum().reset_index()
         st.markdown("### 🔹 Party-wise Votes by Gender")
         st.dataframe(gender_party)
 
@@ -814,7 +814,7 @@ elif page == "🗳️ Gender Analysis":
         st.plotly_chart(fig_gender, use_container_width=True)
 
         # Optional: show percentage distribution
-        gender_pct = gender_party.groupby("gender_norm").apply(
+        gender_pct = gender_party.groupby("Sex").apply(
             lambda x: x.assign(pct=x["total_votes"] / x["total_votes"].sum() * 100)
         ).reset_index(drop=True)
         st.markdown("#### Percentage Distribution by Gender")
