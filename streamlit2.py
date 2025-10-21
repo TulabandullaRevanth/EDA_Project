@@ -791,7 +791,10 @@ elif page == "🗳️ Gender Analysis":
             "M": "Male",
             "F": "Female",
             "O": "Other",
-            "o": "Other"
+            "o": "Other",
+            "FEMALE": "Female",
+            "MALE": "Male",
+            "Other": "THIRD"
         })
 
         # Compute turnout by gender
