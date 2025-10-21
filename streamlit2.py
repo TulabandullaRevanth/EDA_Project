@@ -803,7 +803,7 @@ elif page == "🗳️ Gender Analysis":
         ).reset_index()
         turnout_gender["turnout_pct"] = (turnout_gender["total_votes"] / turnout_gender["total_electors"]) * 100
 
-        st.markdown("### 🔹 Gender-wise Voter Turnout (%)")
+        st.markdown("### 🔹Voter Turnout (%)")
         st.dataframe(turnout_gender)
 
         # Bar chart for visualization
