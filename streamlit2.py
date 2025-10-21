@@ -774,6 +774,7 @@ elif page == "📈 Turnout Change Analysis":
 
     else:
         st.error("Required columns missing: state, year, total_votes, total_electors")
+
 # -----------------------------
 # PAGE: Gender-based Analysis
 # -----------------------------
@@ -801,23 +802,20 @@ elif page == "🗳️ Gender Analysis":
             total_electors=("total_electors", "sum")
         ).reset_index()
 
-        turnout_gender["turnout_pct"] = (turnout_gender["total_votes"] / turnout_gender["total_electors"]) * 100
-
-        # Bar chart visualization
+        # Bar chart visualization (total votes)
         fig_bar = px.bar(
             turnout_gender,
             x="Gender",
-            y="turnout_pct",
+            y="total_votes",
             color="Gender",
-            text=turnout_gender["turnout_pct"].round(2),
-            title="Gender-wise Voter Turnout (%)",
-            labels={"turnout_pct": "Turnout (%)"}
+            text=turnout_gender["total_votes"],
+            title="Gender-wise Total Votes",
+            labels={"total_votes": "Total Votes"}
         )
         fig_bar.update_traces(textposition="outside")
-        fig_bar.update_layout(yaxis=dict(range=[0, 100]))
         st.plotly_chart(fig_bar, use_container_width=True)
 
-        # Pie chart visualization
+        # Pie chart visualization (vote share)
         fig_pie = px.pie(
             turnout_gender,
             names="Gender",
