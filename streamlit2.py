@@ -781,13 +781,13 @@ elif page == "📈 Turnout Change Analysis":
 elif page == "🗳️ Gender Analysis":
     st.markdown("## 🗳️ Gender-wise Turnout Analysis")
 
-    required_cols = {"Sex", "total_votes", "total_electors"}
+    required_cols = {"sex", "total_votes", "total_electors"}
     missing_cols = required_cols - set(df_filtered.columns)
     if missing_cols:
         st.warning(f"Cannot perform gender-wise turnout analysis. Missing columns: {', '.join(missing_cols)}")
     else:
         # Normalize gender values
-        df_filtered["Gender"] = df_filtered["Sex"].replace({
+        df_filtered["Gender"] = df_filtered["sex"].replace({
             "M": "Male",
             "F": "Female",
             "O": "Other"
