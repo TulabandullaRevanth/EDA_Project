@@ -774,7 +774,6 @@ elif page == "📈 Turnout Change Analysis":
 
     else:
         st.error("Required columns missing: state, year, total_votes, total_electors")
-
 # -----------------------------
 # PAGE: Gender-based Analysis
 # -----------------------------
@@ -788,37 +787,39 @@ elif page == "🗳️ Gender Analysis":
     else:
         # Normalize gender values
         df_filtered["Gender"] = df_filtered["sex"].replace({
-            "M": "Male",
-            "F": "Female",
-            "O": "Other",
-            "FEMALE": "Female",
-            "MALE": "Male",
-            "Other": "Other"
-        })
+    "M": "Male",
+    "F": "Female",
+    "O": "Other",
+    "o": "Other",
+    "THIRD": "Third",
+    "Third": "Third"
+})
 
-        # Compute turnout by gender
+        # Aggregate votes by gender
         turnout_gender = df_filtered.groupby("Gender").agg(
             total_votes=("total_votes", "sum"),
             total_electors=("total_electors", "sum")
         ).reset_index()
+
         turnout_gender["turnout_pct"] = (turnout_gender["total_votes"] / turnout_gender["total_electors"]) * 100
 
-        st.markdown("### 🔹Voter Turnout (%)")
+        st.markdown("### 🔹 Table: Gender-wise Voter Turnout")
         st.dataframe(turnout_gender)
 
-        # Bar chart for visualization
+        # Bar chart visualization
         fig = px.bar(
             turnout_gender,
             x="Gender",
             y="turnout_pct",
             color="Gender",
             text=turnout_gender["turnout_pct"].round(2),
-            title="Voter Turnout Percentage by Gender",
+            title="Gender-wise Voter Turnout (%)",
             labels={"turnout_pct": "Turnout (%)"}
         )
         fig.update_traces(textposition="outside")
         fig.update_layout(yaxis=dict(range=[0, 100]))
         st.plotly_chart(fig, use_container_width=True)
+
 # -----------------------------
 # PAGE: Age-wise Turnout Analysis
 # -----------------------------
