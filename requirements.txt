@@ -1,19 +1,8 @@
-# Core App Framework
-streamlit==1.38.0
-
-# Data Handling
-pandas==2.2.2
-numpy==1.26.4
-
-# Visualization
-plotly==5.24.0
-
-# Optional (Recommended for smoother visuals / caching / URLs)
-requests==2.32.3
-
-# GeoJSON handling (optional, but useful for map visualization)
-geopandas==1.0.1
-shapely==2.0.6
-
-# Utility (in case your CSVs are large or have encoding issues)
-pyarrow==17.0.0
+streamlit>=1.33
+pandas>=2.1
+numpy>=1.24
+plotly>=5.18
+requests>=2.31
+geopandas>=0.14
+shapely>=2.0
+pyarrow>=15.0
