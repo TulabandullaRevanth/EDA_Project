@@ -775,18 +775,17 @@ elif page == "📈 Turnout Change Analysis":
     else:
         st.error("Required columns missing: state, year, total_votes, total_electors")
 
-
 # -----------------------------
 # PAGE: Gender-based Analysis
 # -----------------------------
 elif page == "🗳️ Gender Analysis":
     st.markdown("## 🗳️ Gender-based Analysis")
 
-    if "gender" not in df_filtered.columns or "total_votes" not in df_filtered.columns:
-        st.warning("Gender or total_votes column missing — cannot perform analysis.")
+    if "category" not in df_filtered.columns or "total_votes" not in df_filtered.columns:
+        st.warning("Category or total_votes column missing — cannot perform analysis.")
     else:
         # Normalize gender values
-        df_filtered["gender_norm"] = df_filtered["gender"].astype(str).str.upper().replace({
+        df_filtered["gender_norm"] = df_filtered["category"].astype(str).str.upper().replace({
             "M": "Male",
             "F": "Female",
             "MALE": "Male",
