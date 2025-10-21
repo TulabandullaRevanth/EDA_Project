@@ -790,7 +790,8 @@ elif page == "🗳️ Gender Analysis":
         df_filtered["Gender"] = df_filtered["sex"].replace({
             "M": "Male",
             "F": "Female",
-            "O": "Other"
+            "O": "Other",
+            "o": "Other"
         })
 
         # Compute turnout by gender
