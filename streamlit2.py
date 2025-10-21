@@ -60,7 +60,7 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
-pages = ["🏠 Home", "📈 Statewise Votes", "🏙️ Party Performance(Trends)", "📊 Party-State Insights", "🗳️ Turnout Comparison", "🎯 Top Candidates", "📈 Turnout Change Analysis"]
+pages = ["🏠 Home", "📈 Statewise Votes", "🏙️ Party Performance(Trends)", "📊 Party-State Insights", "🗳️ Turnout Comparison", "🎯 Top Candidates", "📈 Turnout Change Analysis","🗳️ Gender Analysis"]
 page = st.radio("Navigation", pages, horizontal=True, label_visibility="collapsed")
 
 # -----------------------------
@@ -775,3 +775,48 @@ elif page == "📈 Turnout Change Analysis":
     else:
         st.error("Required columns missing: state, year, total_votes, total_electors")
 
+
+# -----------------------------
+# PAGE: Gender-based Analysis
+# -----------------------------
+elif page == "🗳️ Gender Analysis":
+    st.markdown("## 🗳️ Gender-based Analysis")
+
+    if "gender" not in df_filtered.columns or "total_votes" not in df_filtered.columns:
+        st.warning("Gender or total_votes column missing — cannot perform analysis.")
+    else:
+        # Normalize gender values
+        df_filtered["gender_norm"] = df_filtered["gender"].astype(str).str.upper().replace({
+            "M": "Male",
+            "F": "Female",
+            "MALE": "Male",
+            "FEMALE": "Female"
+        })
+
+        # Count votes by gender
+        gender_counts = df_filtered.groupby("gender_norm")["total_votes"].sum().reset_index()
+        st.markdown("### 🔹 Total Votes by Gender")
+        st.dataframe(gender_counts)
+
+        # Votes per party by gender
+        gender_party = df_filtered.groupby(["gender_norm", "party"])["total_votes"].sum().reset_index()
+        st.markdown("### 🔹 Party-wise Votes by Gender")
+        st.dataframe(gender_party)
+
+        # Bar chart visualization
+        fig_gender = px.bar(
+            gender_party,
+            x="party",
+            y="total_votes",
+            color="gender_norm",
+            barmode="group",
+            title="Party-wise Votes by Gender"
+        )
+        st.plotly_chart(fig_gender, use_container_width=True)
+
+        # Optional: show percentage distribution
+        gender_pct = gender_party.groupby("gender_norm").apply(
+            lambda x: x.assign(pct=x["total_votes"] / x["total_votes"].sum() * 100)
+        ).reset_index(drop=True)
+        st.markdown("#### Percentage Distribution by Gender")
+        st.dataframe(gender_pct)
