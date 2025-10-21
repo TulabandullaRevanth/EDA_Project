@@ -779,43 +779,41 @@ elif page == "📈 Turnout Change Analysis":
 # PAGE: Gender-based Analysis
 # -----------------------------
 elif page == "🗳️ Gender Analysis":
-    st.markdown("## 🗳️ Gender-based Analysis")
+    st.markdown("## 🗳️ Gender-wise Turnout Analysis")
 
-    if "category" not in df_filtered.columns or "total_votes" not in df_filtered.columns:
-        st.warning("Category or total_votes column missing — cannot perform analysis.")
+    required_cols = {"Sex", "total_votes", "total_electors"}
+    missing_cols = required_cols - set(df_filtered.columns)
+    if missing_cols:
+        st.warning(f"Cannot perform gender-wise turnout analysis. Missing columns: {', '.join(missing_cols)}")
     else:
         # Normalize gender values
-        df_filtered["Sex"] = df_filtered["category"].astype(str).str.upper().replace({
+        df_filtered["Gender"] = df_filtered["Sex"].replace({
             "M": "Male",
             "F": "Female",
-            "MALE": "Male",
-            "FEMALE": "Female"
+            "O": "Other"
         })
 
-        # Count votes by gender
-        gender_counts = df_filtered.groupby("Sex")["total_votes"].sum().reset_index()
-        st.markdown("### 🔹 Total Votes by Gender")
-        st.dataframe(gender_counts)
+        # Compute turnout by gender
+        turnout_gender = df_filtered.groupby("Gender").agg(
+            total_votes=("total_votes", "sum"),
+            total_electors=("total_electors", "sum")
+        ).reset_index()
+        turnout_gender["turnout_pct"] = (turnout_gender["total_votes"] / turnout_gender["total_electors"]) * 100
 
-        # Votes per party by gender
-        gender_party = df_filtered.groupby(["Sex", "party"])["total_votes"].sum().reset_index()
-        st.markdown("### 🔹 Party-wise Votes by Gender")
-        st.dataframe(gender_party)
+        st.markdown("### 🔹 Gender-wise Voter Turnout (%)")
+        st.dataframe(turnout_gender)
 
-        # Bar chart visualization
-        fig_gender = px.bar(
-            gender_party,
-            x="party",
-            y="total_votes",
-            color="gender_norm",
-            barmode="group",
-            title="Party-wise Votes by Gender"
+        # Bar chart for visualization
+        fig = px.bar(
+            turnout_gender,
+            x="Gender",
+            y="turnout_pct",
+            color="Gender",
+            text=turnout_gender["turnout_pct"].round(2),
+            title="Voter Turnout Percentage by Gender",
+            labels={"turnout_pct": "Turnout (%)"}
         )
-        st.plotly_chart(fig_gender, use_container_width=True)
+        fig.update_traces(textposition="outside")
+        fig.update_layout(yaxis=dict(range=[0, 100]))
+        st.plotly_chart(fig, use_container_width=True)
 
-        # Optional: show percentage distribution
-        gender_pct = gender_party.groupby("Sex").apply(
-            lambda x: x.assign(pct=x["total_votes"] / x["total_votes"].sum() * 100)
-        ).reset_index(drop=True)
-        st.markdown("#### Percentage Distribution by Gender")
-        st.dataframe(gender_pct)
