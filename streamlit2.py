@@ -60,7 +60,7 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
-pages = ["🏠 Home", "📈 Statewise Votes", "🏙️ Party Performance(Trends)", "📊 Party-State Insights", "🗳️ Turnout Comparison", "🎯 Top Candidates", "📈 Turnout Change Analysis","🗳️ Gender Analysis","Age-wise Turnout"]
+pages = ["🏠 Home", "📈 Statewise Votes", "🏙️ Party Performance(Trends)", "📊 Party-State Insights", "🗳️ Turnout Comparison", "🎯 Top Candidates", "📈 Turnout Change Analysis","Age-wise Turnout"]
 page = st.radio("Navigation", pages, horizontal=True, label_visibility="collapsed")
 
 # -----------------------------
@@ -91,6 +91,25 @@ def load_data():
     return df
 
 df_all = load_data()
+# -----------------------------
+# 🧹 Handle Missing (Null) Values
+# -----------------------------
+
+# Fill missing demographic or categorical fields with 'Unknown'
+for col in ["sex", "age", "category", "party_symbol"]:
+    if col in df_all.columns:
+        df_all[col].fillna("Unknown", inplace=True)
+
+# Standardize 'sex' column values for consistency
+if "sex" in df_all.columns:
+    df_all["sex"] = (
+        df_all["sex"]
+        .astype(str)
+        .str.strip()
+        .str.title()
+        .replace({"Nan": "Unknown"})
+    )
+
 
 # -----------------------------
 # Zones
@@ -260,6 +279,11 @@ st.sidebar.write(f"🏛️ Parties: {len(selected_parties)} selected")
 # -----------------------------
 # PAGE: Home (map)
 # -----------------------------
+
+# Optional: Check null values after cleaning
+with st.expander("🔍 Data Quality Summary (After Cleaning)"):
+    st.write(df_all.isnull().sum())
+    
 @st.cache_data
 def load_geojson_try_sources(local_paths=None):
     """
@@ -775,56 +799,6 @@ elif page == "📈 Turnout Change Analysis":
     else:
         st.error("Required columns missing: state, year, total_votes, total_electors")
 
-# -----------------------------
-# PAGE: Gender-based Analysis
-# -----------------------------
-elif page == "🗳️ Gender Analysis":
-    st.markdown("## 🗳️ Gender-wise Turnout Analysis")
-
-    required_cols = {"sex", "total_votes", "total_electors"}
-    missing_cols = required_cols - set(df_filtered.columns)
-    if missing_cols:
-        st.warning(f"Cannot perform gender-wise turnout analysis. Missing columns: {', '.join(missing_cols)}")
-    else:
-        # Normalize gender values: strip spaces and convert to uppercase
-        df_filtered["Gender"] = (
-            df_filtered["sex"]
-            .astype(str)  # Ensure it's a string
-            .str.strip()  # Remove leading/trailing spaces
-            .str.upper()  # Convert to uppercase for consistent mapping
-            .replace({"M": "Male", "F": "Female", "O": "Other", "o": "Other", "THIRD": "Third", "Third": "Third", "FEMALE": "Female", "MALE": "Male"
-            })
-        )
-
-        # Aggregate votes by gender
-        turnout_gender = df_filtered.groupby("Gender").agg(
-            total_votes=("total_votes", "sum"),
-            total_electors=("total_electors", "sum")
-        ).reset_index()
-
-        # Bar chart visualization (total votes)
-        fig_bar = px.bar(
-            turnout_gender,
-            x="Gender",
-            y="total_votes",
-            color="Gender",
-            text=turnout_gender["total_votes"],
-            title="Gender-wise Total Votes",
-            labels={"total_votes": "Total Votes"}
-        )
-        fig_bar.update_traces(textposition="outside")
-        st.plotly_chart(fig_bar, use_container_width=True)
-
-        # Pie chart visualization (vote share)
-        fig_pie = px.pie(
-            turnout_gender,
-            names="Gender",
-            values="total_votes",
-            title="Gender-wise Vote Share",
-            color="Gender",
-            color_discrete_sequence=px.colors.qualitative.Set2
-        )
-        st.plotly_chart(fig_pie, use_container_width=True)
 
 # -----------------------------
 # PAGE: Age-wise Turnout Analysis
