@@ -345,9 +345,7 @@ NAME_REPLACE = state_name_corrections
 # PAGE: Home (map)
 # -----------------------------
 
-with st.expander("🔍 Data Quality Summary (After Cleaning)"):
-    st.write(df_all.isnull().sum())
-    
+
 if page == "🏠 Home":
     st.markdown("### 🗺️ Total Votes by State")
 
