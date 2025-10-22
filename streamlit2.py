@@ -281,9 +281,7 @@ st.sidebar.write(f"🏛️ Parties: {len(selected_parties)} selected")
 # -----------------------------
 
 # Optional: Check null values after cleaning
-with st.expander("🔍 Data Quality Summary (After Cleaning)"):
-    st.write(df_all.isnull().sum())
-    
+
 @st.cache_data
 def load_geojson_try_sources(local_paths=None):
     """
@@ -346,6 +344,10 @@ NAME_REPLACE = state_name_corrections
 # -----------------------------
 # PAGE: Home (map)
 # -----------------------------
+
+with st.expander("🔍 Data Quality Summary (After Cleaning)"):
+    st.write(df_all.isnull().sum())
+    
 if page == "🏠 Home":
     st.markdown("### 🗺️ Total Votes by State")
 
