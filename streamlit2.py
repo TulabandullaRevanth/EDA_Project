@@ -60,7 +60,7 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
-pages = ["🏠 Home", "📈 Statewise Votes", "🏙️ Party Performance(Trends)", "📊 Party-State Insights", "🗳️ Turnout Comparison", "🎯 Top Candidates", "📈 Turnout Change Analysis","Age-wise Turnout"]
+pages = ["🏠 Home", "📈 Statewise Votes", "🏙️ Party Performance(Trends)", "📊 Party-State Insights", "🗳️ Turnout Comparison", "🎯 Top Candidates","🧑‍🤝‍🧑 Candidate Comparison (2014 vs 2019)", "📈 Turnout Change Analysis","Age-wise Turnout"]
 page = st.radio("Navigation", pages, horizontal=True, label_visibility="collapsed")
 
 # -----------------------------
@@ -535,9 +535,6 @@ elif page == "🏙️ Party Performance(Trends)":
         fig_pie.update_layout(showlegend=True, title_x=0.5)
         st.plotly_chart(fig_pie, use_container_width=True)
 
-
-
-
 # -----------------------------
 # PAGE: Party-State Insights
 # -----------------------------
@@ -563,22 +560,43 @@ elif page == "📊 Party-State Insights":
         # -----------------------------
         view_type = st.radio(
             "Select Visualization Type:",
-            ["🗺️ Treemap", "🌞 Sunburst", "🔥 Heatmap", "📋 Data Table"],
+            ["📊 Bar Graph", "🌞 Sunburst", "📋 Data Table"],
             horizontal=True
         )
 
         # -----------------------------
-        # Treemap
+        # Bar Graph
         # -----------------------------
-        if view_type == "🗺️ Treemap":
-            fig_tree = px.treemap(
-                df_viz,
-                path=["state", "party"],
-                values="total_votes",
-                title="State-wise Party Vote Distribution",
+        if view_type == "📊 Bar Graph":
+
+            # Aggregate total votes by State and Party
+            df_bar = (
+                df_viz.groupby(["state", "party"], as_index=False)["total_votes"]
+                .sum()
+                .sort_values(["state", "total_votes"], ascending=[True, False])
             )
-            fig_tree.update_layout(height=750)
-            st.plotly_chart(fig_tree, use_container_width=True)
+
+            # Create grouped bar chart
+            fig_bar = px.bar(
+                df_bar,
+                x="state",
+                y="total_votes",
+                color="party",
+                barmode="group",
+                title="State-wise Party Vote Distribution",
+                labels={"total_votes": "Total Votes", "state": "State"},
+            )
+
+            # Improve readability
+            fig_bar.update_layout(
+                height=750,
+                xaxis_tickangle=-45,
+                legend_title_text="Party",
+                title_x=0.5,
+                margin=dict(t=80, l=20, r=20, b=80)
+            )
+
+            st.plotly_chart(fig_bar, use_container_width=True)
 
         # -----------------------------
         # Sunburst
@@ -594,21 +612,6 @@ elif page == "📊 Party-State Insights":
             st.plotly_chart(fig_sun, use_container_width=True)
 
         # -----------------------------
-        # Heatmap
-        # -----------------------------
-        elif view_type == "🔥 Heatmap":
-            fig_heat = px.density_heatmap(
-                df_viz,
-                x="year",
-                y="state",
-                z="total_votes",
-                color_continuous_scale="Viridis",
-                title="Party Performance by State and Year",
-            )
-            fig_heat.update_layout(height=750)
-            st.plotly_chart(fig_heat, use_container_width=True)
-
-        # -----------------------------
         # Data Table
         # -----------------------------
         else:
@@ -618,6 +621,7 @@ elif page == "📊 Party-State Insights":
                 .reset_index(drop=True),
                 use_container_width=True
             )
+
 # -----------------------------
 # PAGE: Turnout Comparison
 # -----------------------------
@@ -670,6 +674,8 @@ elif page == "🎯 Top Candidates":
             .groupby("state", group_keys=False)
             .apply(lambda x: x.nlargest(5, "total_votes"))
         )
+        
+
 
         # 🔹 Bar Chart — Faceted by State
         fig_bar = px.bar(
@@ -716,6 +722,112 @@ elif page == "🎯 Top Candidates":
         st.error("⚠️ Required columns missing: state, candidate, party, total_votes")
 
 
+# -----------------------------
+# PAGE: Candidate Comparison (2014 vs 2019)
+# -----------------------------
+elif page == "🧑‍🤝‍🧑 Candidate Comparison (2014 vs 2019)":
+    st.markdown("## 🧑‍🤝‍🧑 Candidate Vote Comparison — 2014 vs 2019")
+
+    required_cols = {"year", "state", "candidate", "party", "total_votes"}
+    if not required_cols.issubset(df_all.columns):
+        st.error("⚠️ Required columns missing: year, state, candidate, party, total_votes")
+    else:
+        # Filter based on sidebar selections
+        df_cmp = df_all[
+            (df_all["year"].isin(year_selected)) &
+            (df_all["state"].isin(selected_states)) &
+            (df_all["party"].isin(selected_parties))
+        ].copy()
+
+        if df_cmp.empty:
+            st.warning("No data found for selected filters.")
+            st.stop()
+
+        # Clean text
+        df_cmp["state"] = df_cmp["state"].astype(str).str.strip().str.title()
+        df_cmp["candidate"] = df_cmp["candidate"].astype(str).str.strip()
+        df_cmp["party"] = df_cmp["party"].astype(str).str.strip()
+        df_cmp["total_votes"] = pd.to_numeric(df_cmp["total_votes"], errors="coerce")
+
+        # Aggregate total votes per candidate, per year
+        candidate_votes = (
+            df_cmp.groupby(["year", "state", "candidate", "party"], as_index=False)["total_votes"]
+            .sum()
+        )
+
+        # -----------------------------
+        # Visualization mode
+        # -----------------------------
+        view_type = st.radio(
+            "Select View Type:",
+            ["📊 Bar Chart", "📈 Line Chart (Trend)", "📋 Data Table"],
+            horizontal=True
+        )
+
+        # -----------------------------
+        # 📊 Bar Chart Comparison
+        # -----------------------------
+        if view_type == "📊 Bar Chart":
+            if len(year_selected) > 1:
+                fig_bar = px.bar(
+                    candidate_votes,
+                    x="candidate",
+                    y="total_votes",
+                    color="year",
+                    facet_col="state",
+                    facet_col_wrap=3,
+                    text="total_votes",
+                    title="Candidate Vote Comparison by Year and State",
+                    labels={"total_votes": "Total Votes", "candidate": "Candidate"},
+                )
+            else:
+                fig_bar = px.bar(
+                    candidate_votes,
+                    x="candidate",
+                    y="total_votes",
+                    color="party",
+                    facet_col="state",
+                    facet_col_wrap=3,
+                    text="total_votes",
+                    title=f"Candidate Vote Distribution — {year_selected[0]}",
+                )
+
+            fig_bar.update_traces(texttemplate="%{text:,}", textposition="outside")
+            fig_bar.update_layout(
+                height=900,
+                bargap=0.3,
+                title_x=0.5,
+                margin=dict(t=80, l=20, r=20, b=80)
+            )
+            st.plotly_chart(fig_bar, use_container_width=True)
+
+        # -----------------------------
+        # 📈 Line Chart (Trend)
+        # -----------------------------
+        elif view_type == "📈 Line Chart (Trend)":
+            fig_line = px.line(
+                candidate_votes,
+                x="year",
+                y="total_votes",
+                color="candidate",
+                line_group="candidate",
+                facet_col="state",
+                facet_col_wrap=3,
+                title="Candidate Vote Trend (2014 vs 2019)",
+                markers=True,
+                labels={"total_votes": "Total Votes", "year": "Election Year"},
+            )
+            fig_line.update_layout(height=900, title_x=0.5)
+            st.plotly_chart(fig_line, use_container_width=True)
+
+        # -----------------------------
+        # 📋 Data Table
+        # -----------------------------
+        else:
+            st.dataframe(
+                candidate_votes.sort_values(["state", "year", "total_votes"], ascending=[True, True, False]),
+                use_container_width=True
+            )
 
 # -----------------------------
 # PAGE: Turnout Change Analysis (2014 → 2019)
