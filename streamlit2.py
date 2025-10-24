@@ -560,9 +560,22 @@ elif page == "📊 Party-State Insights":
         # -----------------------------
         view_type = st.radio(
             "Select Visualization Type:",
-            ["📊 Bar Graph", "🌞 Sunburst", "📋 Data Table"],
+            ["🗺️ Treemap","📊 Bar Graph", "🌞 Sunburst", "📋 Data Table"],
             horizontal=True
         )
+
+        # -----------------------------
+        # Treemap
+        # -----------------------------
+        if view_type == "🗺️ Treemap":
+            fig_tree = px.treemap(
+                df_viz,
+                path=["state", "party"],
+                values="total_votes",
+                title="State-wise Party Vote Distribution",
+            )
+            fig_tree.update_layout(height=750)
+            st.plotly_chart(fig_tree, use_container_width=True)
 
         # -----------------------------
         # Bar Graph
