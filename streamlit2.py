@@ -60,7 +60,7 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
-pages = ["🏠 Home", "📈 Statewise Votes", "🏙️ Party Performance(Trends)", "📊 Party-State Insights", "🗳️ Turnout Comparison", "🎯 Top Candidates","🧑‍🤝‍🧑 Candidate Comparison (2014 vs 2019)", "📈 Turnout Change Analysis","Age-wise Turnout"]
+pages = ["🏠 Home", "📈 Statewise Votes", "🏙️ Party Performance(Trends)", "📊 Party-State Insights", "🗳️ Turnout Comparison", "🎯 Top Candidates","🧑‍🤝‍🧑 Candidate Comparison (2014 vs 2019)", "📈 Turnout Change Analysis"]
 page = st.radio("Navigation", pages, horizontal=True, label_visibility="collapsed")
 
 # -----------------------------
@@ -922,52 +922,3 @@ elif page == "📈 Turnout Change Analysis":
     else:
         st.error("Required columns missing: state, year, total_votes, total_electors")
 
-
-# -----------------------------
-# PAGE: Age-wise Turnout Analysis
-# -----------------------------
-elif page == "Age-wise Turnout":
-    st.markdown("## 🗳️ Age-wise Turnout Analysis")
-
-    required_cols = {"age", "general_votes"}
-    missing_cols = required_cols - set(df_filtered.columns)
-    if missing_cols:
-        st.warning(f"Cannot perform age-wise turnout analysis. Missing columns: {', '.join(missing_cols)}")
-    else:
-        df_age = df_filtered[df_filtered['age'].notna()].copy()
-        df_age['age'] = pd.to_numeric(df_age['age'], errors='coerce')
-        df_age = df_age.dropna(subset=['age'])
-
-        # Create age groups
-        bins = [18, 25, 35, 45, 55, 65, 100]
-        labels = ['18-24', '25-34', '35-44', '45-54', '55-64', '65+']
-        df_age['age_group'] = pd.cut(df_age['age'], bins=bins, labels=labels, right=False)
-
-        # Aggregate votes by age group
-        age_turnout = df_age.groupby('age_group').agg(
-            total_votes=('general_votes', 'sum')
-        ).reset_index()
-
-        # Bar chart
-        fig_bar = px.bar(
-            age_turnout,
-            x='age_group',
-            y='total_votes',
-            text='total_votes',
-            color='age_group',
-            title="Age-wise Voter Turnout",
-            labels={'total_votes': 'Total Votes', 'age_group': 'Age Group'}
-        )
-        fig_bar.update_traces(texttemplate='%{text:,}', textposition='outside')
-        st.plotly_chart(fig_bar, use_container_width=True)
-
-        # Pie chart
-        fig_pie = px.pie(
-            age_turnout,
-            names='age_group',
-            values='total_votes',
-            title="Age-wise Vote Share",
-            color='age_group',
-            color_discrete_sequence=px.colors.qualitative.Set3
-        )
-        st.plotly_chart(fig_pie, use_container_width=True)
